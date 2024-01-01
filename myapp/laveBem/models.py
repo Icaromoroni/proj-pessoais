@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.hashers import make_password
 
 # Create your models here.
 class Servico(models.Model):
@@ -36,6 +37,12 @@ class Funcionario(models.Model):
     
     class Meta:
         verbose_name_plural = 'Funcionários'
+    
+    def save(self, *args, **kwargs):
+        # Ao salvar, se a senha não estiver criptografada, criptografa
+        if not self.senha.startswith('bcrypt'):
+            self.senha = make_password(self.senha)
+        super().save(*args, **kwargs)
     
     def __str__(self) -> str:
         return self.pessoa.nome

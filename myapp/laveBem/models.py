@@ -51,4 +51,14 @@ class Atendimento(models.Model):
     helper = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='atendimentos_ajudados')
     data_atendimento = models.DateTimeField(help_text='Data do atendimento')
 
+class Venda(models.Model):
+    PAG = [
+        ('1', 'Pix'),
+        ('2', 'Debito'),
+        ('3', 'Crédito'),
+    ]
+    forma_pag = models.CharField(max_length=10, choices=PAG)
+    desconto = models.IntegerField()
+    valor_total = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$')
+    gerente = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='desconto', null=True, blank=True)
 

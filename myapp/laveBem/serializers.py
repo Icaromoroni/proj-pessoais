@@ -20,5 +20,5 @@ class FuncionarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Funcionario
-        fields = '__all__'
+        fields = ['id', 'username', 'email', 'password']
     

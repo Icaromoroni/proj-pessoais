@@ -58,7 +58,7 @@ class Venda(models.Model):
         ('3', 'Crédito'),
     ]
     forma_pag = models.CharField(max_length=10, choices=PAG)
-    desconto = models.IntegerField()
+    desconto = models.IntegerField(default=0)
     valor_total = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$')
     gerente = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='desconto', null=True, blank=True)
 

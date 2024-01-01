@@ -22,10 +22,11 @@ class Pessoa(models.Model):
         return self.nome
     
 
-class Cliente(models.Model):
-    pessoa = models.OneToOneField(Pessoa, on_delete=models.CASCADE, related_name='cliente')
-    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='clientes', verbose_name='Serviço solicitado')
+class Solicitacao(models.Model):
+    pessoa = models.OneToOneField(Pessoa, on_delete=models.CASCADE, related_name='solicitacao')
+    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='solicitacoes', verbose_name='Serviço solicitado')
     agendamento = models.DateTimeField(help_text='Data de agendamento do serviço.')
+    processado = models.BooleanField(verbose_name='Processado?', default=False)
 
     def __str__(self) -> str:
         return self.pessoa.nome
@@ -53,12 +54,11 @@ class Atendimento(models.Model):
                 ('2', 'Realizado'),
                 ('3', 'Cancelado'),]
     
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='atendimentos')
+    solicitacao = models.ForeignKey(Solicitacao, on_delete=models.CASCADE, related_name='atendimentos')
+    situacao = models.CharField(max_length=9, default='1', choices=SITUACAO)
     atendente = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='atendimentos_atendidos')
     helper = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='atendimentos_ajudados')
     data_atendimento = models.DateTimeField(help_text='Data do atendimento')
-    agendamento = models.DateTimeField(help_text='Data de agendamento do serviço.')
-    situacao = models.CharField(max_length=9, default='1', choices=SITUACAO)
 
     def add(self, pk_atendente, pk_helper):
         self.id_atendente = pk_atendente

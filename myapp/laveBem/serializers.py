@@ -54,8 +54,8 @@ class FuncionarioSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         pessoa_data = validated_data.pop('pessoa')
         pessoa_instance = Pessoa.objects.create(**pessoa_data)
-        cliente_instance = Funcionario.objects.create(pessoa=pessoa_instance, **validated_data)
-        return cliente_instance
+        funcionario_instance = Funcionario.objects.create(pessoa=pessoa_instance, **validated_data)
+        return funcionario_instance
     
     def update(self, instance, validated_data):
         pessoa_data = validated_data.pop('pessoa')
@@ -67,9 +67,9 @@ class FuncionarioSerializer(serializers.ModelSerializer):
         pessoa_instance.endereco = pessoa_data.get('endereco', pessoa_instance.endereco)
         pessoa_instance.save()
 
-        # Atualiza os campos do Cliente
-        instance.servico = validated_data.get('servico', instance.servico)
-        instance.agendamento = validated_data.get('agendamento', instance.agendamento)
+        # Atualiza os campos do Funcionario
+        instance.cargo = validated_data.get('cargo', instance.cargo)
+        instance.ativo = validated_data.get('ativo', instance.ativo)
         instance.save()
 
         return instance

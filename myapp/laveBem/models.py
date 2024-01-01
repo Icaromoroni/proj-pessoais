@@ -28,11 +28,23 @@ class Solicitacao(models.Model):
     agendamento = models.DateTimeField(help_text='Data de agendamento do serviço.')
     processado = models.BooleanField(verbose_name='Processado?', default=False)
 
+    class Meta:
+        verbose_name_plural = 'Solicitações'
+
     def __str__(self) -> str:
         return self.pessoa.nome
 
 class Funcionario(models.Model):
+
+    CARGO = [
+        ('1', 'Gerente'),
+        ('2', 'Atendente'),
+        ('3', 'Helper'),
+
+    ]
+
     pessoa = models.OneToOneField(Pessoa, on_delete=models.CASCADE, related_name='funcionario')
+    cargo = models.CharField(max_length=30, choices=CARGO)
     senha = models.CharField(max_length=40)
     ativo = models.BooleanField(verbose_name='Ativo?', default=True)
     

@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 class Servico(models.Model):
@@ -13,67 +13,42 @@ class Servico(models.Model):
     def __str__(self) -> str:
         return self.descricao
 
-class Pessoa(models.Model):
-    nome = models.CharField(max_length=200)
-    telefone = models.CharField(max_length=15)
+class Agendamento(models.Model):
+    nome = models.CharField(max_length=200, verbose_name='Nome do cliente')
+    telefone = models.CharField(max_length=15, help_text='Exemplo: (99) 99999-9999.')
     endereco = models.CharField(max_length=300)
+    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='solicitacoes', verbose_name='Serviço')
+    data = models.DateTimeField(help_text='Data de agendamento do serviço.')
+    processado = models.BooleanField(verbose_name='Processado?', default=False)
 
     def __str__(self) -> str:
         return self.nome
-    
 
-class Solicitacao(models.Model):
-    pessoa = models.OneToOneField(Pessoa, on_delete=models.CASCADE, related_name='solicitacao')
-    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='solicitacoes', verbose_name='Serviço solicitado')
-    agendamento = models.DateTimeField(help_text='Data de agendamento do serviço.')
-    processado = models.BooleanField(verbose_name='Processado?', default=False)
-
-    class Meta:
-        verbose_name_plural = 'Solicitações'
-
-    def __str__(self) -> str:
-        return self.pessoa.nome
-
-class Funcionario(models.Model):
-
+class Funcionario(AbstractUser):
     CARGO = [
         ('1', 'Gerente'),
         ('2', 'Atendente'),
         ('3', 'Helper'),
-
     ]
 
-    pessoa = models.OneToOneField(Pessoa, on_delete=models.CASCADE, related_name='funcionario')
     cargo = models.CharField(max_length=30, choices=CARGO)
-    senha = models.CharField(max_length=40)
-    ativo = models.BooleanField(verbose_name='Ativo?', default=True)
     
     class Meta:
         verbose_name_plural = 'Funcionários'
     
-    def save(self, *args, **kwargs):
-        # Ao salvar, se a senha não estiver criptografada, criptografa
-        if not self.senha.startswith('bcrypt'):
-            self.senha = make_password(self.senha)
-        super().save(*args, **kwargs)
-    
     def __str__(self) -> str:
-        return self.pessoa.nome
-    
+        return self.username
+ 
 
 class Atendimento(models.Model):
     SITUACAO = [('1', 'Pendente'),
                 ('2', 'Realizado'),
                 ('3', 'Cancelado'),]
     
-    solicitacao = models.ForeignKey(Solicitacao, on_delete=models.CASCADE, related_name='atendimentos')
+    agendamento = models.ForeignKey(Agendamento, on_delete=models.CASCADE, related_name='atendimentos')
     situacao = models.CharField(max_length=9, default='1', choices=SITUACAO)
     atendente = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='atendimentos_atendidos')
     helper = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='atendimentos_ajudados')
     data_atendimento = models.DateTimeField(help_text='Data do atendimento')
 
-    def add(self, pk_atendente, pk_helper):
-        self.id_atendente = pk_atendente
-        self.id_helper = pk_helper
-        self.save()
 

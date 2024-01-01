@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import Solicitacao
+from .models import Agendamento
 
 
-@admin.register(Solicitacao)
-class SolicitacaoAdmin(admin.ModelAdmin):
-    list_display = ['pessoa','servico','agendamento']
+@admin.register(Agendamento)
+class AgendamentoAdmin(admin.ModelAdmin):
+    list_display = ['nome','servico','data']

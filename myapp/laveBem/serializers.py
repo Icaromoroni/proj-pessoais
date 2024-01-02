@@ -22,17 +22,25 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'email', 'password', 'cargo']
+        fields = ['id', 'username', 'email', 'password', 'cargo', 'is_active', 'is_staff']
     
     def create(self, validated_data):
-        usuario = Usuario.objects.create(
+        usuario, created = Usuario.objects.get_or_create(
             username=validated_data['username'],
             email=validated_data['email'],
-            cargo = validated_data['cargo']
+            defaults={'cargo': validated_data['cargo']}
         )
         usuario.set_password(validated_data['password'])
         usuario.save()
         return usuario
+    
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.cargo = validated_data.get('cargo', instance.cargo)
+        instance.set_password(validated_data.get('password', instance.password))
+        instance.save()
+        return instance
 
 
 class AtendimentoSerializer(serializers.ModelSerializer):

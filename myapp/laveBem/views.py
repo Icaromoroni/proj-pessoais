@@ -103,7 +103,7 @@ class AgendamentoDetailUpdate(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 class UsuarioListCreate(APIView):
     """
     List all servico, or create a new servico.
@@ -124,3 +124,28 @@ class UsuarioListCreate(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@permission_classes([IsAuthenticated])
+class UsuarioDetailUpdate(APIView):
+    """
+    Retrieve, update or delete a agendamento instance.
+    """
+    def get_object(self, pk):
+        try:
+            return Usuario.objects.get(pk=pk)
+        except Usuario.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        cliente = self.get_object(pk)
+        serializer = UsuarioSerializer(cliente)
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+
+        cliente = self.get_object(pk)
+        serializer = UsuarioSerializer(cliente, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -24,17 +24,18 @@ class Agendamento(models.Model):
     def __str__(self) -> str:
         return self.nome
 
-class Funcionario(AbstractUser):
+class Usuario(AbstractUser):
     CARGO = [
         ('1', 'Gerente'),
         ('2', 'Atendente'),
         ('3', 'Helper'),
+        ('4', 'Cliente'),
     ]
 
-    cargo = models.CharField(max_length=30, choices=CARGO)
+    cargo = models.CharField(max_length=30, default='4', choices=CARGO)
     
     class Meta:
-        verbose_name_plural = 'Funcionários'
+        verbose_name_plural = 'Usuários'
     
     def __str__(self) -> str:
         return self.username
@@ -47,8 +48,8 @@ class Atendimento(models.Model):
     
     agendamento = models.ForeignKey(Agendamento, on_delete=models.CASCADE, related_name='atendimentos')
     situacao = models.CharField(max_length=9, default='1', choices=SITUACAO)
-    atendente = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='atendimentos_atendidos')
-    helper = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='atendimentos_ajudados')
+    atendente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='atendimentos_atendidos')
+    helper = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='atendimentos_ajudados')
     data_atendimento = models.DateTimeField(help_text='Data do atendimento')
 
 class Venda(models.Model):
@@ -60,5 +61,5 @@ class Venda(models.Model):
     forma_pag = models.CharField(max_length=10, choices=PAG)
     desconto = models.IntegerField(default=0)
     valor_total = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$')
-    gerente = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='desconto', null=True, blank=True)
+    gerente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='desconto', null=True, blank=True)
 

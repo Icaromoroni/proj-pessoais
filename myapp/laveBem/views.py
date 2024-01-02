@@ -4,6 +4,8 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 
 class ServicoListCreate(APIView):
     """
@@ -13,13 +15,18 @@ class ServicoListCreate(APIView):
         servico = Servico.objects.all()
         serializer = ServicoSerializer(servico, many=True)
         return Response(serializer.data)
-
+    
+    @permission_classes([IsAuthenticated])
     def post(self, request, format=None):
+        if not request.user.groups.filter(name='Gerente').exists():
+            return Response({'error': 'Você não tem permissão para criar um serviço.'}, status=status.HTTP_403_FORBIDDEN)
+        
         serializer = ServicoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ServicoDetailUpdate(APIView):
     """
@@ -36,7 +43,11 @@ class ServicoDetailUpdate(APIView):
         serializer = ServicoSerializer(servico)
         return Response(serializer.data)
 
+    @permission_classes([IsAuthenticated])
     def put(self, request, pk, format=None):
+        if not request.user.groups.filter(name='Gerente').exists():
+            return Response({'error': 'Você não tem permissão para atualizar um serviço.'}, status=status.HTTP_403_FORBIDDEN)
+
         servico = self.get_object(pk)
         serializer = ServicoSerializer(servico, data=request.data)
         if serializer.is_valid():
@@ -49,7 +60,6 @@ class ServicoDetailUpdate(APIView):
     #     servico.delete()
     #     return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 class AgendamentoListCreate(APIView):
     """
     List all cliente, or create a new cliente.
@@ -59,17 +69,19 @@ class AgendamentoListCreate(APIView):
         serializer = AgendamentoSerializer(cliente, many=True)
         return Response(serializer.data)
 
+    @permission_classes([IsAuthenticated])
     def post(self, request, format=None):
+
         serializer = AgendamentoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+@permission_classes([IsAuthenticated])
 class AgendamentoDetailUpdate(APIView):
     """
-    Retrieve, update or delete a snippet instance.
+    Retrieve, update or delete a agendamento instance.
     """
     def get_object(self, pk):
         try:
@@ -83,6 +95,7 @@ class AgendamentoDetailUpdate(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
+
         cliente = self.get_object(pk)
         serializer = AgendamentoSerializer(cliente, data=request.data)
         if serializer.is_valid():

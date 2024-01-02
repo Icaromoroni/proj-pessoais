@@ -28,6 +28,7 @@ class ServicoListCreate(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @permission_classes([IsAuthenticated])
 class ServicoDetailUpdate(APIView):
     """
@@ -63,6 +64,7 @@ class ServicoDetailUpdate(APIView):
     #     servico.delete()
     #     return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 @permission_classes([IsAuthenticated])
 class AgendamentoListCreate(APIView):
     """
@@ -81,6 +83,7 @@ class AgendamentoListCreate(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @permission_classes([IsAuthenticated])
 class AgendamentoDetailUpdate(APIView):
@@ -107,28 +110,35 @@ class AgendamentoDetailUpdate(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @permission_classes([IsAuthenticated])
 class FuncionarioListCreate(APIView):
     """
-    List all usuário, or create a new usuário.
+    List all funcionários, or create a new funcionário.
     """
     def get(self, request, format=None):
-        if not request.user.groups.filter(name='Gerente').exists():
+
+        
+        user = Usuario.objects.get(pk=request.user.pk)
+
+        if not user.is_staff and not request.user.groups.filter(name='Gerente').exists():
             return Response({'error': 'Você não tem permissão para visualizar funcionários.'}, status=status.HTTP_403_FORBIDDEN)
         
         usuario = Usuario.objects.filter(funcionario=True)
-        serializer = FuncionarioSerializer(usuario, many=True, context={'request': request})
+        serializer = FuncionarioSerializer(usuario, many=True, context={'request': request, 'user': user})
         return Response(serializer.data)
     
  
     def post(self, request, format=None):
                 
         if request.data['cargo'] != 'Cliente':
-            if not request.user.groups.filter(name='Gerente').exists():
+            user = Usuario.objects.get(pk=request.user.pk)
+
+            if not user.is_staff and not request.user.groups.filter(name='Gerente').exists():
                 return Response({'error': 'Você não tem permissão para criar um funcionário.'}, status=status.HTTP_403_FORBIDDEN)
             request.data['funcionario'] = True
 
-        serializer = FuncionarioSerializer(data=request.data, context={'request': request})
+        serializer = FuncionarioSerializer(data=request.data, context={'request': request, 'user': user})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -138,7 +148,7 @@ class FuncionarioListCreate(APIView):
 @permission_classes([IsAuthenticated])
 class FuncionarioDetailUpdate(APIView):
     """
-    Retrieve, update or delete a agendamento instance.
+    Retrieve, update or delete a funcionários instance.
     """
     def get_object(self, pk):
         try:
@@ -147,26 +157,30 @@ class FuncionarioDetailUpdate(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
+        
+        user = Usuario.objects.get(pk=request.user.pk)
 
-        if request.user.groups.filter(name='Gerente').exists():     
+        if user.is_staff or request.user.groups.filter(name='Gerente').exists():
             funcionario = self.get_object(pk)
         elif request.user.pk != pk:
             raise Http404
         else:
             funcionario = self.get_object(request.user.pk)
-        serializer = FuncionarioSerializer(funcionario, context={'request': request})
+        serializer = FuncionarioSerializer(funcionario, context={'request': request, 'user': user})
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
+        
+        user = Usuario.objects.get(pk=request.user.pk)
 
-        if request.user.groups.filter(name='Gerente').exists():     
+        if user.is_staff or request.user.groups.filter(name='Gerente').exists():
             funcionario = self.get_object(pk)
         elif request.user.pk != pk:
             raise Http404
         else:
             funcionario = self.get_object(request.user.pk)
 
-        serializer = FuncionarioSerializer(funcionario, data=request.data, context={'request': request})
+        serializer = FuncionarioSerializer(funcionario, data=request.data, context={'request': request, 'user': user})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

@@ -1,18 +1,7 @@
 from rest_framework import serializers
 from .models import Atendimento, Servico, Agendamento, Usuario
-from rest_framework.permissions import BasePermission
+from django.contrib.auth.models import Group
 
-
-class ReadOnlyFieldsPermission(BasePermission):
-    """
-    Permissão para permitir apenas leitura em campos específicos para determinados grupos.
-    """
-    def has_permission(self, request, view):
-        # Verifica se o usuário pertence ao grupo Atendente ou Helper
-        return (
-            request.user.groups.filter(name='Atendente').exists() or
-            request.user.groups.filter(name='Helper').exists()
-        )
 
 class ServicoSerializer(serializers.ModelSerializer):
 
@@ -42,13 +31,14 @@ class FuncionarioSerializer(serializers.ModelSerializer):
         # Define os campos desejados como somente leitura
         campos_proibidos = ['id', 'cargo', 'is_active', 'funcionario']
 
-        if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists():
+        if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['user'].is_staff:
             for campo_proibido in campos_proibidos:
                 self.fields[campo_proibido].read_only = True
 
     def create(self, validated_data):
         funcionario_data = validated_data.pop('funcionario', False)
         cargo = validated_data.get('cargo')
+        print(cargo)
 
         if cargo == 'Cliente':
             raise serializers.ValidationError("O cargo não pode ser 'Cliente' ao criar um usuário.")
@@ -58,6 +48,14 @@ class FuncionarioSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             defaults={'cargo': cargo}
         )
+
+        # Adiciona o usuário ao grupo correspondente ao cargo
+        try:
+            group = Group.objects.get(name=cargo)
+            usuario.groups.add(group)
+        except Group.DoesNotExist:
+            # Lidere com o caso onde o grupo correspondente ao cargo não existe
+            pass
 
         usuario.funcionario = funcionario_data
         usuario.set_password(validated_data['password'])

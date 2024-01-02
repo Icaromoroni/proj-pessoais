@@ -32,7 +32,8 @@ class Usuario(AbstractUser):
         ('Cliente', 'Cliente'),
     ]
 
-    cargo = models.CharField(max_length=30, default='4', choices=CARGO)
+    cargo = models.CharField(max_length=30, default='Cliente', choices=CARGO)
+    funcionario = models.BooleanField(verbose_name='Funcionário?', default=False)
     
     class Meta:
         verbose_name_plural = 'Usuários'

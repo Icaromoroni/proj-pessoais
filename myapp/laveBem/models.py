@@ -48,8 +48,14 @@ class Atendimento(models.Model):
     
     agendamento = models.ForeignKey(Agendamento, on_delete=models.CASCADE, related_name='atendimentos')
     situacao = models.CharField(max_length=9, default='1', choices=SITUACAO)
-    atendente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='atendimentos_atendidos')
-    helper = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='atendimentos_ajudados')
+    atendente = models.ForeignKey(Usuario,
+                                  on_delete=models.CASCADE,
+                                  related_name='atendimentos_atendidos',
+                                  limit_choices_to={'cargo': '2'})
+    helper = models.ForeignKey(Usuario,
+                               on_delete=models.CASCADE,
+                               related_name='atendimentos_ajudados',
+                               limit_choices_to={'cargo': '3'})
     data_atendimento = models.DateTimeField(help_text='Data do atendimento')
 
 class Venda(models.Model):

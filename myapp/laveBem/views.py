@@ -1,5 +1,5 @@
-from .models import Servico, Agendamento
-from .serializers import ServicoSerializer, AgendamentoSerializer
+from .models import Servico, Agendamento, Usuario
+from .serializers import ServicoSerializer, AgendamentoSerializer, UsuarioSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -102,3 +102,25 @@ class AgendamentoDetailUpdate(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# @permission_classes([IsAuthenticated])
+class UsuarioListCreate(APIView):
+    """
+    List all servico, or create a new servico.
+    """
+    def get(self, request, format=None):
+        usuario = Usuario.objects.all()
+        serializer = UsuarioSerializer(usuario, many=True)
+        return Response(serializer.data)
+    
+    @permission_classes([IsAuthenticated])
+    def post(self, request, format=None):
+        # if not request.user.groups.filter(name='Gerente').exists():
+        #     return Response({'error': 'Você não tem permissão para criar um serviço.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = UsuarioSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

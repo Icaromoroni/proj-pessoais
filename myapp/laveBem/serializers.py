@@ -35,6 +35,8 @@ class FuncionarioSerializer(serializers.ModelSerializer):
         if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['user'].is_staff:
             for campo_proibido in campos_proibidos:
                 self.fields[campo_proibido].read_only = True
+        if self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and self.context['user'].is_staff:
+            self.fields[campos_proibidos[3]].read_only = True
 
     def create(self, validated_data):
         funcionario_data = validated_data.pop('funcionario', False)
@@ -62,20 +64,8 @@ class FuncionarioSerializer(serializers.ModelSerializer):
         usuario.save()
         return usuario
 
-    def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.cargo = validated_data.get('cargo', instance.cargo)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
-        instance.is_active = validated_data.get('is_active', instance.is_active)
-        instance.funcionario = validated_data.get('funcionario', instance.funcionario)
-        instance.set_password(validated_data.get('password', instance.password))
-        instance.save()
-        return instance
-    
 
-class ClienteSignupSerializer(serializers.ModelSerializer):
+class ClienteSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True)
     email = serializers.EmailField(required=True)
@@ -85,7 +75,7 @@ class ClienteSignupSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'cargo', 'funcionario']
     
     def __init__(self, *args, **kwargs):
-        super(ClienteSignupSerializer, self).__init__(*args, **kwargs)
+        super(ClienteSerializer, self).__init__(*args, **kwargs)
 
         # Define os campos desejados como somente leitura
         campos_proibidos = ['id', 'cargo', 'funcionario']
@@ -93,6 +83,8 @@ class ClienteSignupSerializer(serializers.ModelSerializer):
         if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['user'].is_staff:
             for campo_proibido in campos_proibidos:
                 self.fields[campo_proibido].read_only = True
+        if self.context['request'].user.groups.filter(name__in=['Gerente']).exists():
+            self.fields[campos_proibidos[3]].read_only = True
 
     def create(self, validated_data):
 
@@ -104,6 +96,7 @@ class ClienteSignupSerializer(serializers.ModelSerializer):
         usuario.set_password(validated_data['password'])
         usuario.save()
         return usuario
+
 
 class AtendimentoSerializer(serializers.ModelSerializer):
     class Meta:

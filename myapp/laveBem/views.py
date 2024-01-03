@@ -1,5 +1,5 @@
 from .models import Servico, Agendamento, Usuario
-from .serializers import ClienteSignupSerializer, ServicoSerializer, AgendamentoSerializer, FuncionarioSerializer
+from .serializers import ClienteSerializer, ServicoSerializer, AgendamentoSerializer, FuncionarioSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -196,14 +196,14 @@ class FuncionarioDetailUpdate(APIView):
         else:
             funcionario = self.get_object(user.pk)
 
-        serializer = FuncionarioSerializer(funcionario, data=request.data, context={'request': request, 'user': user})
+        serializer = FuncionarioSerializer(funcionario, data=request.data, context={'request': request, 'user': user}, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ClienteSignupListCreate(APIView):
+class ClienteListCreate(APIView):
     """
     List all clientes, or create a new cliente.
     """
@@ -218,7 +218,7 @@ class ClienteSignupListCreate(APIView):
             return Response({'detail': 'Permissão negada.'}, status=status.HTTP_401_UNAUTHORIZED)
         
         usuario = Usuario.objects.filter(funcionario=False, is_staff=False)
-        serializer = ClienteSignupSerializer(usuario, many=True, context={'request': request, 'user': user})
+        serializer = ClienteSerializer(usuario, many=True, context={'request': request, 'user': user})
         return Response(serializer.data)
     
  
@@ -226,8 +226,52 @@ class ClienteSignupListCreate(APIView):
 
         user = request.user
 
-        serializer = ClienteSignupSerializer(data=request.data, context={'request': request, 'user': user})
+        serializer = ClienteSerializer(data=request.data, context={'request': request, 'user': user})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class ClienteDetailUpdate(APIView):
+    """
+    Retrieve, update or delete a clientes instance.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk):
+        try:
+            return Usuario.objects.get(pk=pk, funcionario=False, is_staff=False)
+        except Usuario.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        
+        user = request.user
+
+        if user.is_staff or request.user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
+            cliente = self.get_object(pk)
+        elif user.pk != pk:
+            raise Http404
+        else:
+            cliente = self.get_object(user.pk)
+
+        serializer = ClienteSerializer(cliente, context={'request': request, 'user': user})
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        
+        user = request.user
+
+        if user.is_staff or request.user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
+            cliente = self.get_object(pk)
+        elif user.pk != pk:
+            raise Http404
+        else:
+            cliente = self.get_object(user.pk)
+
+        serializer = ClienteSerializer(cliente, data=request.data, context={'request': request, 'user': user}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

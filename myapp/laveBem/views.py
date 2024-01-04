@@ -2,6 +2,7 @@ from .models import Servico, Agendamento, Usuario
 from .serializers import ClienteSerializer, ServicoSerializer, AgendamentoSerializer, FuncionarioSerializer
 from django.http import Http404
 from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -85,11 +86,14 @@ class AgendamentoListCreate(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        grupos = ['Gerente', 'Atendente']
+
         user = request.user
 
-        if not user.is_staff and not request.user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
+        if not user.is_staff and not request.user.groups.filter(name__in=grupos).exists():
             return Response({'detail': 'Você não tem permissão para criar um agendamento.'}, status=status.HTTP_401_UNAUTHORIZED)
 
+        request.data['processado'] = True
         serializer = AgendamentoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -110,11 +114,20 @@ class AgendamentoDetailUpdate(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
+        grupos = ['Gerente', 'Atendente']
+        user = request.user
+        if not user.is_staff and not request.user.groups.filter(name__in=grupos).exists():
+            return Response({'detail': 'Você não tem permissão para concluir a ação.'}, status=status.HTTP_401_UNAUTHORIZED)
+
         cliente = self.get_object(pk)
         serializer = AgendamentoSerializer(cliente)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
+        grupos = ['Gerente', 'Atendente']
+        user = request.user
+        if not user.is_staff and not request.user.groups.filter(name__in=grupos).exists():
+            return Response({'detail': 'Você não tem permissão para concluir a ação.'}, status=status.HTTP_401_UNAUTHORIZED)
 
         cliente = self.get_object(pk)
         serializer = AgendamentoSerializer(cliente, data=request.data)
@@ -122,6 +135,52 @@ class AgendamentoDetailUpdate(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class AutoAgendamentoCreate(generics.CreateAPIView):
+
+    permission_classes = [IsAuthenticated]
+
+    queryset = Agendamento.objects.all()
+    serializer_class = AgendamentoSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(cliente_id=self.request.user, processado=False)
+
+class BuscarAgendamentoList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = AgendamentoSerializer
+
+    def get_queryset(self):
+
+        queryset = Agendamento.objects.all()
+
+        processado = self.request.query_params.get('p')
+        data = self.request.query_params.get('data')
+        cliente = self.request.query_params.get('email')
+        servico = self.request.query_params.get('cod')
+
+        if processado:
+            queryset = queryset.filter(processado=processado)
+        elif data:
+            queryset = queryset.filter(data=data)
+        elif cliente:
+            queryset = queryset.filter(cliente_id__email=cliente)
+        elif servico:
+            queryset = queryset.filter(servico__pk=servico)
+        return queryset
+    
+    def list(self, request, *args, **kwargs):
+        grupos = ['Gerente', 'Atendente']
+        user = request.user
+        queryset = self.get_queryset()
+
+        if not user.is_staff and not request.user.groups.filter(name__in=grupos).exists():
+            return Response({'detail': 'Você não tem permissão para concluir a ação.'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class FuncionarioListCreate(APIView):

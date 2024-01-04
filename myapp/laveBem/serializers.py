@@ -3,20 +3,6 @@ from .models import Atendimento, Servico, Agendamento, Usuario
 from django.contrib.auth.models import Group
 
 
-class ServicoSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Servico
-        fields = '__all__'
-
-
-class AgendamentoSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Agendamento
-        fields = '__all__'
-
-
 class FuncionarioSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True)
@@ -63,6 +49,18 @@ class FuncionarioSerializer(serializers.ModelSerializer):
         usuario.set_password(validated_data['password'])
         usuario.save()
         return usuario
+    
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.is_active = validated_data.get('is_active', instance.is_active)
+        instance.cargo = validated_data.get('cargo', instance.cargo)
+        instance.set_password(validated_data.get('password', instance.password))
+
+        instance.save()
+        return instance
 
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -83,8 +81,6 @@ class ClienteSerializer(serializers.ModelSerializer):
         if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['user'].is_staff:
             for campo_proibido in campos_proibidos:
                 self.fields[campo_proibido].read_only = True
-        if self.context['request'].user.groups.filter(name__in=['Gerente']).exists():
-            self.fields[campos_proibidos[3]].read_only = True
 
     def create(self, validated_data):
 
@@ -96,7 +92,40 @@ class ClienteSerializer(serializers.ModelSerializer):
         usuario.set_password(validated_data['password'])
         usuario.save()
         return usuario
+    
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.set_password(validated_data.get('password', instance.password))
 
+        instance.save()
+        return instance
+
+
+class ServicoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Servico
+        fields = '__all__'
+
+
+class AgendamentoSerializer(serializers.ModelSerializer):
+
+    cliente_id = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(funcionario=False, is_staff=False), required=False)
+    nome_cliente = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Agendamento
+        fields = '__all__'
+    
+    def get_nome_cliente(self, obj):
+        return obj.cliente_id.username if obj.cliente_id else None
+    
+    def get_email(self, obj):
+        return obj.cliente_id.email if obj.cliente_id else None
 
 class AtendimentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -105,13 +134,13 @@ class AtendimentoSerializer(serializers.ModelSerializer):
 
     def validate_atendente(self, value):
         # Verifica se o atendente tem o cargo 'Atendente'
-        if value.cargo != '2':
+        if value.cargo != 'Atendente':
             raise serializers.ValidationError({'detail':"O atendente deve ter o cargo 'Atendente'."})
         return value
 
     def validate_helper(self, value):
         # Verifica se o helper tem o cargo 'Helper'
-        if value.cargo != '3':
+        if value.cargo != 'Helper':
             raise serializers.ValidationError({'detail':"O helper deve ter o cargo 'Helper'."})
         return value
     

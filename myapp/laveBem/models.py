@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-# Create your models here.
+
 class Servico(models.Model):
     descricao = models.CharField(max_length=300)
     valor = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$')
@@ -13,16 +13,6 @@ class Servico(models.Model):
     def __str__(self) -> str:
         return self.descricao
 
-class Agendamento(models.Model):
-    nome = models.CharField(max_length=200, verbose_name='Nome do cliente')
-    telefone = models.CharField(max_length=15, help_text='Exemplo: (99) 99999-9999.')
-    endereco = models.CharField(max_length=300)
-    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='solicitacoes', verbose_name='Serviço')
-    data = models.DateTimeField(help_text='Data de agendamento do serviço.')
-    processado = models.BooleanField(verbose_name='Processado?', default=False)
-
-    def __str__(self) -> str:
-        return self.nome
 
 class Usuario(AbstractUser):
     CARGO = [
@@ -40,7 +30,19 @@ class Usuario(AbstractUser):
     
     def __str__(self) -> str:
         return self.username
- 
+
+
+class Agendamento(models.Model):
+    cliente_id = models.ForeignKey(Usuario, related_name='agendamentos', on_delete=models.CASCADE, verbose_name='Nome do cliente')
+    telefone = models.CharField(max_length=15, help_text='Exemplo: (99) 99999-9999.')
+    endereco = models.CharField(max_length=300)
+    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='solicitacoes', verbose_name='Serviço')
+    data = models.DateTimeField(help_text='Data de agendamento do serviço.')
+    processado = models.BooleanField(verbose_name='Processado?', default=False)
+
+    def __str__(self) -> str:
+        return self.cliente_id.username
+
 
 class Atendimento(models.Model):
     SITUACAO = [('1', 'Pendente'),

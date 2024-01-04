@@ -120,6 +120,17 @@ class AgendamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agendamento
         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super(AgendamentoSerializer, self).__init__(*args, **kwargs)
+
+        # Define os campos desejados como somente leitura
+        campos_proibidos = ['id', 'processado']
+
+        if not self.context['request'].user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
+            for campo_proibido in campos_proibidos:
+                self.fields[campo_proibido].read_only = True
+
     
     def get_nome_cliente(self, obj):
         return obj.cliente_id.username if obj.cliente_id else None

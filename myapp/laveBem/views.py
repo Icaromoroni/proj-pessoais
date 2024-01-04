@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import AnonymousUser
+from django.shortcuts import get_list_or_404
 
 
 
@@ -182,6 +183,30 @@ class BuscarAgendamentoList(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+
+class BuscarMeusAgendamentosList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = AgendamentoSerializer
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        queryset = get_list_or_404(Agendamento, cliente_id=user)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class BuscarMeusAgendamentosDetailUpdate(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = AgendamentoSerializer
+    def get_queryset(self):
+        # Apenas agendamentos associados ao usuário autenticado
+        return Agendamento.objects.filter(cliente_id=self.request.user)
+
+    def perform_update(self, serializer):
+        # Garante que o agendamento está associado ao usuário autenticado antes de atualizar
+        serializer.save(cliente_id=self.request.user)
 
 class FuncionarioListCreate(APIView):
     """

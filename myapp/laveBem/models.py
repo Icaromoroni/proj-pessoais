@@ -39,6 +39,7 @@ class Agendamento(models.Model):
     servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='solicitacoes', verbose_name='Serviço')
     data = models.DateTimeField(help_text='Data de agendamento do serviço.')
     processado = models.BooleanField(verbose_name='Processado?', default=False)
+    cancelar = models.BooleanField(verbose_name='Cancelar?', default=False)
 
     def __str__(self) -> str:
         return self.cliente_id.username

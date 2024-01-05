@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import get_list_or_404
+from .permissions import AtendimentoPermission
 
 
 
@@ -200,11 +201,9 @@ class BuscarMeusAgendamentosDetailUpdate(generics.RetrieveUpdateAPIView):
 
     serializer_class = AgendamentoSerializer
     def get_queryset(self):
-        # Apenas agendamentos associados ao usuário autenticado
         return Agendamento.objects.filter(cliente_id=self.request.user)
 
     def perform_update(self, serializer):
-        # Garante que o agendamento está associado ao usuário autenticado antes de atualizar
         serializer.save(cliente_id=self.request.user)
 
 class FuncionarioListCreate(APIView):
@@ -224,8 +223,7 @@ class FuncionarioListCreate(APIView):
         usuario = Usuario.objects.filter(funcionario=True)
         serializer = FuncionarioSerializer(usuario, many=True, context={'request': request, 'user': user})
         return Response(serializer.data)
-    
- 
+
     def post(self, request, format=None):
                 
         user = request.user
@@ -302,8 +300,7 @@ class ClienteListCreate(APIView):
         
         usuario = Usuario.objects.filter(funcionario=False, is_staff=False)
         serializer = ClienteSerializer(usuario, many=True, context={'request': request, 'user': user})
-        return Response(serializer.data)
-    
+        return Response(serializer.data)  
  
     def post(self, request, format=None):
 
@@ -361,18 +358,15 @@ class ClienteDetailUpdate(APIView):
 
 
 class AtendimentoList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, AtendimentoPermission]
 
     serializer_class = AtendimentoListSerializer
 
     def list(self, request, *args, **kwargs):
-        grupos = ['Gerente', 'Atendente', 'Helper']
         user = request.user
         queryset = Atendimento.objects.all()
-
-        if not user.is_staff and not user.groups.filter(name__in=grupos).exists():
-            return Response({'detail': 'Você não tem permissão para visualizar atendimentos.'}, status=status.HTTP_401_UNAUTHORIZED)
         
-        if user.cargo == 'Helper':
+        if user.groups.filter(name='Helper'):
             queryset = Atendimento.objects.filter(helper=user)
         
         serializer = self.get_serializer(queryset, many=True)
@@ -381,18 +375,32 @@ class AtendimentoList(generics.ListAPIView):
 
 class AtendimentoCreate(generics.CreateAPIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, AtendimentoPermission]
     
     serializer_class = AtendimentoCreateSerializer
     queryset = Atendimento.objects.all()
 
     def perform_create(self, serializer):
 
-        agendamento = serializer.validated_data['agendamento']
         serializer.save(atendente=self.request.user)
+
+        agendamento = serializer.validated_data['agendamento']
         agendamento.processado = True
         agendamento.save()
 
         serializer.save()
+
+class AtendimentoDetailUpdate(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, AtendimentoPermission]
+    queryset = Atendimento.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return AtendimentoListSerializer
+        elif self.request.method == 'PUT' or self.request.method == 'PATCH':
+            return AtendimentoCreateSerializer
+    
+    def perform_update(self, serializer):
+        serializer.save(atendente=self.request.user)
 
 

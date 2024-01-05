@@ -25,6 +25,7 @@ urlpatterns = [
     path('buscar/meus-agendamentos/<int:pk>/', BuscarMeusAgendamentosDetailUpdate.as_view()),
     
     path('atendimentos/', AtendimentoList.as_view()),
+    path('atendimentos/<int:pk>/', AtendimentoDetailUpdate.as_view()),
     path('cadastro/atendimento/', AtendimentoCreate.as_view()),
 
 

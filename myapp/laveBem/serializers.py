@@ -144,15 +144,9 @@ class AtendimentoCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['atendente']
 
-    def __init__(self, *args, **kwargs):
-        super(AtendimentoCreateSerializer, self).__init__(*args, **kwargs)
-
-        if not self.context['request'].user.groups.filter(name__in=['Gerente', 'Atendente']).exists() and not self.context['request'].user.is_staff:
-            raise serializers.ValidationError({'detail':'Você não tem permissão para criar um atendimento.'})
-
     def validate_agendamento(self, value):
-        if value.processado == True:
-            raise serializers.ValidationError({'detail':"O atendimento para esse agendamento já foi realizado."})
+        if self.context['request'].method == 'POST' and value.processado:
+            raise serializers.ValidationError({'detail': "O atendimento para esse agendamento já foi realizado."})
         return value
 
 

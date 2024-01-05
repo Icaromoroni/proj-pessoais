@@ -46,12 +46,12 @@ class Agendamento(models.Model):
 
 
 class Atendimento(models.Model):
-    SITUACAO = [('1', 'Pendente'),
-                ('2', 'Realizado'),
-                ('3', 'Cancelado'),]
+    SITUACAO = [('Pendente', 'Pendente'),
+                ('Realizado', 'Realizado'),
+                ('Cancelado', 'Cancelado'),]
     
     agendamento = models.ForeignKey(Agendamento, on_delete=models.CASCADE, related_name='atendimentos')
-    situacao = models.CharField(max_length=9, default='Cliente', choices=SITUACAO)
+    situacao = models.CharField(max_length=9, default='Pendente', choices=SITUACAO)
     atendente = models.ForeignKey(Usuario,
                                   on_delete=models.CASCADE,
                                   related_name='atendimentos_atendidos',
@@ -60,7 +60,7 @@ class Atendimento(models.Model):
                                on_delete=models.CASCADE,
                                related_name='atendimentos_ajudados',
                                limit_choices_to={'cargo': 'Helper'})
-    data_atendimento = models.DateTimeField(help_text='Data do atendimento')
+    data_atendimento = models.DateTimeField(auto_now=True,help_text='Data do atendimento')
 
 class Venda(models.Model):
     PAG = [

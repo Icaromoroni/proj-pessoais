@@ -138,20 +138,60 @@ class AgendamentoSerializer(serializers.ModelSerializer):
     def get_email(self, obj):
         return obj.cliente_id.email if obj.cliente_id else None
 
-class AtendimentoSerializer(serializers.ModelSerializer):
+class AtendimentoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Atendimento
         fields = '__all__'
+        read_only_fields = ['atendente']
+
+    def __init__(self, *args, **kwargs):
+        super(AtendimentoCreateSerializer, self).__init__(*args, **kwargs)
+
+        if not self.context['request'].user.groups.filter(name__in=['Gerente', 'Atendente']).exists() and not self.context['request'].user.is_staff:
+            raise serializers.ValidationError({'detail':'Você não tem permissão para criar um atendimento.'})
+
+    def validate_agendamento(self, value):
+        if value.processado == True:
+            raise serializers.ValidationError({'detail':"O atendimento para esse agendamento já foi realizado."})
+        return value
+
 
     def validate_atendente(self, value):
         # Verifica se o atendente tem o cargo 'Atendente'
         if value.cargo != 'Atendente':
-            raise serializers.ValidationError({'detail':"O atendente deve ter o cargo 'Atendente'."})
+            raise serializers.ValidationError({'detail':"Valor inválido, só é possível adicionar atendentes."})
         return value
 
     def validate_helper(self, value):
         # Verifica se o helper tem o cargo 'Helper'
         if value.cargo != 'Helper':
-            raise serializers.ValidationError({'detail':"O helper deve ter o cargo 'Helper'."})
+            raise serializers.ValidationError({'detail':"Valor inválido, só é possível adicionar helpers."})
         return value
+
+
+class AgendamentoListSerializer(serializers.ModelSerializer):
+    nome_cliente = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Agendamento
+        exclude = []
     
+    def get_nome_cliente(self, obj):
+        return obj.cliente_id.username if obj.cliente_id else None
+
+
+class AtendimentoListSerializer(serializers.ModelSerializer):
+
+    agendamento = AgendamentoListSerializer(read_only=True)
+    nome_atendente = serializers.SerializerMethodField()
+    nome_helper = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Atendimento
+        exclude = []
+    
+    def get_nome_atendente(self, obj):
+        return obj.atendente.username if obj.atendente else None
+    
+    def get_nome_helper(self, obj):
+        return obj.helper.username if obj.helper else None

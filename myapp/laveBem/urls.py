@@ -23,6 +23,10 @@ urlpatterns = [
 
     path('buscar/meus-agendamentos/', BuscarMeusAgendamentosList.as_view()),
     path('buscar/meus-agendamentos/<int:pk>/', BuscarMeusAgendamentosDetailUpdate.as_view()),
+    
+    path('atendimentos/', AtendimentoList.as_view()),
+    path('cadastro/atendimento/', AtendimentoCreate.as_view()),
+
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Atendimento, Servico, Agendamento, Usuario
 
 
-class FuncionarioSerializer(serializers.ModelSerializer):
+class UsuarioSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True)
     email = serializers.EmailField(required=True)
@@ -12,7 +12,7 @@ class FuncionarioSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'cargo', 'is_active', 'funcionario']
     
     def __init__(self, *args, **kwargs):
-        super(FuncionarioSerializer, self).__init__(*args, **kwargs)
+        super(UsuarioSerializer, self).__init__(*args, **kwargs)
 
         campos_proibidos = ['id', 'cargo', 'is_active', 'funcionario']
 
@@ -21,48 +21,7 @@ class FuncionarioSerializer(serializers.ModelSerializer):
                 self.fields[campo_proibido].read_only = True
         
         if self.context['request'].method == 'PUT':
-            campos = self.fields['password'].required=False
-
-
-class ClienteSerializer(serializers.ModelSerializer):
-
-    password = serializers.CharField(write_only=True)
-    email = serializers.EmailField(required=True)
-
-    class Meta:
-        model = Usuario
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'cargo', 'funcionario']
-    
-    def __init__(self, *args, **kwargs):
-        super(ClienteSerializer, self).__init__(*args, **kwargs)
-
-        # Define os campos desejados como somente leitura
-        campos_proibidos = ['id', 'cargo', 'funcionario']
-
-        if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['user'].is_staff:
-            for campo_proibido in campos_proibidos:
-                self.fields[campo_proibido].read_only = True
-
-    def create(self, validated_data):
-
-        usuario, created = Usuario.objects.get_or_create(
-            username=validated_data['username'],
-            email=validated_data['email']
-        )
-
-        usuario.set_password(validated_data['password'])
-        usuario.save()
-        return usuario
-    
-    def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
-        instance.set_password(validated_data.get('password', instance.password))
-
-        instance.save()
-        return instance
+            self.fields['password'].required=False
 
 
 class ServicoSerializer(serializers.ModelSerializer):

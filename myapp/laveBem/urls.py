@@ -9,7 +9,8 @@ urlpatterns = [
     path('funcionarios/', FuncionarioListCreate.as_view()),
     path('funcionarios/<int:pk>/', FuncionarioDetailUpdate.as_view()),
 
-    path('inscrever-se/', ClienteListCreate.as_view()),
+    path('inscrever-se/', ClienteCreate.as_view()),
+    path('inscritos/', ClienteList.as_view()),
     path('inscritos/<int:pk>/', ClienteDetailUpdate.as_view()),
 
     path('servicos/', ServicoListCreate.as_view()),

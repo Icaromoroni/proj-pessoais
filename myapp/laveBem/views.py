@@ -6,8 +6,9 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group
 from django.shortcuts import get_list_or_404
+from django.contrib.auth.hashers import make_password
 from .permissions import GerenteAtendenteHelperPermission, GerentePermission, AnonimousGerentePermission, GerenteAtendetePermission
 
 
@@ -114,7 +115,7 @@ class FuncionarioListCreate(generics.ListCreateAPIView):
     """
     permission_classes = [IsAuthenticated, GerentePermission]
 
-    serializer_class = FuncionarioSerializer
+    serializer_class = UsuarioSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = get_list_or_404(Usuario, funcionario=True)
@@ -141,7 +142,14 @@ class FuncionarioListCreate(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     def perform_create(self, serializer):
+        password = self.request.data.get('password')
+
+        hashed_password = make_password(password)
+
+        serializer.validated_data['password'] = hashed_password
+
         serializer.save()
+
 
 
 class FuncionarioDetailUpdate(generics.RetrieveUpdateAPIView):
@@ -149,7 +157,7 @@ class FuncionarioDetailUpdate(generics.RetrieveUpdateAPIView):
     Retrieve, update or delete a funcionários instance.
     """
     permission_classes = [IsAuthenticated]
-    serializer_class = FuncionarioSerializer
+    serializer_class = UsuarioSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -167,37 +175,33 @@ class FuncionarioDetailUpdate(generics.RetrieveUpdateAPIView):
         if not user.is_staff and not user.groups.filter(name='Gerente').exists():
             if user.pk != serializer.instance.pk:
                 self.permission_denied(self.request)
+        
+        password = self.request.data.get('password', None)
+        
+        if password is not None:
+            hashed_password = make_password(password)
+            serializer.validated_data['password'] = hashed_password
 
         serializer.save()
 
 
-class ClienteListCreate(APIView):
-    """
-    List all clientes, or create a new cliente.
-    """
-    def get(self, request, format=None):
+class ClienteCreate(generics.CreateAPIView):
+    serializer_class = UsuarioSerializer
+    queryset = Usuario.objects.all()
 
-        user = request.user if type(request.user) != AnonymousUser else None
-        
-        if not user:
-            return Response({'detail': 'As credenciais de autenticação não foram fornecidas.'}, status=status.HTTP_401_UNAUTHORIZED)
+    def perform_create(self, serializer):
+        password = self.request.data.get('password')
 
-        if not user.is_staff and not user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
-            return Response({'detail': 'Permissão negada.'}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        usuario = Usuario.objects.filter(funcionario=False, is_staff=False)
-        serializer = ClienteSerializer(usuario, many=True, context={'request': request, 'user': user})
-        return Response(serializer.data)  
- 
-    def post(self, request, format=None):
+        hashed_password = make_password(password)
 
-        user = request.user
+        serializer.validated_data['password'] = hashed_password
 
-        serializer = ClienteSerializer(data=request.data, context={'request': request, 'user': user})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+
+class ClienteList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, GerenteAtendetePermission]
+    serializer_class = UsuarioSerializer
+    queryset = Usuario.objects.filter(funcionario=False, is_staff=False, cargo='Cliente')
     
 
 class ClienteDetailUpdate(APIView):
@@ -223,7 +227,7 @@ class ClienteDetailUpdate(APIView):
         else:
             cliente = self.get_object(user.pk)
 
-        serializer = ClienteSerializer(cliente, context={'request': request, 'user': user})
+        serializer = UsuarioSerializer(cliente, context={'request': request, 'user': user})
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
@@ -237,7 +241,7 @@ class ClienteDetailUpdate(APIView):
         else:
             cliente = self.get_object(user.pk)
 
-        serializer = ClienteSerializer(cliente, data=request.data, context={'request': request, 'user': user}, partial=True)
+        serializer = UsuarioSerializer(cliente, data=request.data, context={'request': request, 'user': user}, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

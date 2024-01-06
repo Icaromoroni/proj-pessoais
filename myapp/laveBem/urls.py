@@ -15,13 +15,12 @@ urlpatterns = [
     path('servicos/', ServicoListCreate.as_view()),
     path('servicos/<int:pk>/', ServicoDetailUpdate.as_view()),
 
-    path('agendamento/', AgendamentoListCreate.as_view()),
-    path('agendamento/<int:pk>/', AgendamentoDetailUpdate.as_view()),
+    path('agendamentos/', AgendamentoListCreate.as_view()),
+    path('agendamentos/<int:pk>/', AgendamentoDetailUpdate.as_view()),
+    path('buscar/agendamentos/', BuscarAgendamentoList.as_view()),
 
     path('auto-agendamento/', AutoAgendamentoCreate.as_view()),
-    path('buscar/agendamento/', BuscarAgendamentoList.as_view()),
-
-    path('buscar/meus-agendamentos/', BuscarMeusAgendamentosList.as_view()),
+    path('buscar/meus-agendamentos/', BuscarAutoAgendamentoList.as_view()),
     path('buscar/meus-agendamentos/<int:pk>/', BuscarMeusAgendamentosDetailUpdate.as_view()),
     
     path('atendimentos/', AtendimentoList.as_view()),

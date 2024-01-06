@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Atendimento, Servico, Agendamento, Usuario
-from django.contrib.auth.models import Group
 
 
 class FuncionarioSerializer(serializers.ModelSerializer):
@@ -15,52 +14,14 @@ class FuncionarioSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super(FuncionarioSerializer, self).__init__(*args, **kwargs)
 
-        # Define os campos desejados como somente leitura
         campos_proibidos = ['id', 'cargo', 'is_active', 'funcionario']
 
-        if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['user'].is_staff:
+        if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['request'].user.is_staff:
             for campo_proibido in campos_proibidos:
                 self.fields[campo_proibido].read_only = True
-        if self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and self.context['user'].is_staff:
-            self.fields[campos_proibidos[3]].read_only = True
-
-    def create(self, validated_data):
-        funcionario_data = validated_data.pop('funcionario', False)
-        cargo = validated_data.get('cargo')
-
-        if cargo == 'Cliente':
-            raise serializers.ValidationError({'detail':'Cargo inválido, as opções são "Gerente", "Atendente" e "Helper".'})
-
-        usuario, created = Usuario.objects.get_or_create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            defaults={'cargo': cargo}
-        )
-
-        # Adiciona o usuário ao grupo correspondente ao cargo
-        try:
-            group = Group.objects.get(name=cargo)
-            usuario.groups.add(group)
-        except Group.DoesNotExist:
-            # Lidere com o caso onde o grupo correspondente ao cargo não existe
-            pass
-
-        usuario.funcionario = funcionario_data
-        usuario.set_password(validated_data['password'])
-        usuario.save()
-        return usuario
-    
-    def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
-        instance.is_active = validated_data.get('is_active', instance.is_active)
-        instance.cargo = validated_data.get('cargo', instance.cargo)
-        instance.set_password(validated_data.get('password', instance.password))
-
-        instance.save()
-        return instance
+        
+        if self.context['request'].method == 'PUT':
+            campos = self.fields['password'].required=False
 
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -120,23 +81,14 @@ class AgendamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agendamento
         fields = '__all__'
+        read_only_fields = ['processado']
 
-    def __init__(self, *args, **kwargs):
-        super(AgendamentoSerializer, self).__init__(*args, **kwargs)
-
-        # Define os campos desejados como somente leitura
-        campos_proibidos = ['id', 'processado']
-
-        if not self.context['request'].user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
-            for campo_proibido in campos_proibidos:
-                self.fields[campo_proibido].read_only = True
-
-    
     def get_nome_cliente(self, obj):
         return obj.cliente_id.username if obj.cliente_id else None
     
     def get_email(self, obj):
         return obj.cliente_id.email if obj.cliente_id else None
+
 
 class AtendimentoCreateSerializer(serializers.ModelSerializer):
     class Meta:

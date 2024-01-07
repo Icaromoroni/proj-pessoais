@@ -176,6 +176,16 @@ class FuncionarioDetailUpdate(generics.RetrieveUpdateAPIView):
             if user.pk != serializer.instance.pk:
                 self.permission_denied(self.request)
         
+        novo_cargo = serializer.validated_data.get('cargo', None)
+
+        if novo_cargo:
+            instancia = serializer.instance
+            grupos_antigos = Group.objects.filter(user=instancia)
+            instancia.groups.remove(*grupos_antigos)
+
+            novo_grupo = Group.objects.get(name=novo_cargo)
+            instancia.groups.add(novo_grupo)
+
         password = self.request.data.get('password', None)
         
         if password is not None:

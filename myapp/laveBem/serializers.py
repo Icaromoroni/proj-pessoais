@@ -16,12 +16,18 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
         campos_proibidos = ['id', 'cargo', 'is_active', 'funcionario']
 
-        if not self.context['request'].user.groups.filter(name__in=['Gerente']).exists() and not self.context['request'].user.is_staff:
+        user = self.context['request'].user
+        if not user.groups.filter(name='Gerente').exists() and not user.is_staff or user.cargo =='Gerente':
             for campo_proibido in campos_proibidos:
                 self.fields[campo_proibido].read_only = True
-        
+            if user.cargo =='Gerente':
+                self.fields[campos_proibidos[3]].read_only = True
+
         if self.context['request'].method == 'PUT':
+            
             self.fields['password'].required=False
+            self.fields['username'].required=False
+            self.fields['email'].required=False
 
 
 class ServicoSerializer(serializers.ModelSerializer):

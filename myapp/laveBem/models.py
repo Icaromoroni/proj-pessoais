@@ -68,7 +68,7 @@ class Venda(models.Model):
         ('2', 'Debito'),
         ('3', 'Crédito'),
     ]
-    atendimento = models.OneToOneField(Agendamento, on_delete=models.CASCADE, related_name='vendas')
+    atendimento = models.OneToOneField(Agendamento, on_delete=models.CASCADE, related_name='vendidos')
     forma_pag = models.CharField(max_length=10, choices=PAG)
     desconto = models.IntegerField(default=0)
     valor_total = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$')

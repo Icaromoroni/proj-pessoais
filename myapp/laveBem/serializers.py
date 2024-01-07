@@ -9,19 +9,21 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'cargo', 'is_active', 'funcionario']
+        exclude = ["is_staff", "user_permissions", "is_superuser"]
     
     def __init__(self, *args, **kwargs):
         super(UsuarioSerializer, self).__init__(*args, **kwargs)
 
-        campos_proibidos = ['id', 'cargo', 'is_active', 'funcionario']
+        campos_proibidos_users = ['id', 'cargo', 'is_active', 'funcionario', 'groups',  "date_joined", "last_login"]
+        campos_proibidos_gerente = ['id', 'funcionario', 'groups', "date_joined", "last_login"]
 
         user = self.context['request'].user
         if not user.groups.filter(name='Gerente').exists() and not user.is_staff or user.cargo =='Gerente':
-            for campo_proibido in campos_proibidos:
+            for campo_proibido in campos_proibidos_users:
                 self.fields[campo_proibido].read_only = True
             if user.cargo =='Gerente':
-                self.fields[campos_proibidos[3]].read_only = True
+                for campo_proibido in campos_proibidos_gerente:
+                    self.fields[campo_proibido].read_only = True
 
         if self.context['request'].method == 'PUT':
             

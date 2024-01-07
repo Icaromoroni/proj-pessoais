@@ -50,7 +50,7 @@ class Atendimento(models.Model):
                 ('Realizado', 'Realizado'),
                 ('Cancelado', 'Cancelado'),]
     
-    agendamento = models.ForeignKey(Agendamento, on_delete=models.CASCADE, related_name='atendimentos')
+    agendamento = models.OneToOneField(Agendamento, on_delete=models.CASCADE, related_name='atendimentos')
     situacao = models.CharField(max_length=9, default='Pendente', choices=SITUACAO)
     atendente = models.ForeignKey(Usuario,
                                   on_delete=models.CASCADE,
@@ -68,6 +68,7 @@ class Venda(models.Model):
         ('2', 'Debito'),
         ('3', 'Crédito'),
     ]
+    atendimento = models.OneToOneField(Agendamento, on_delete=models.CASCADE, related_name='vendas')
     forma_pag = models.CharField(max_length=10, choices=PAG)
     desconto = models.IntegerField(default=0)
     valor_total = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$')

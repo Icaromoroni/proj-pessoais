@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Atendimento, Servico, Agendamento, Usuario
+from django.contrib.auth.models import AnonymousUser
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -14,14 +15,17 @@ class UsuarioSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super(UsuarioSerializer, self).__init__(*args, **kwargs)
 
+        request = self.context['request']
+
         campos_proibidos_users = ['id', 'cargo', 'is_active', 'funcionario', 'groups',  "date_joined", "last_login"]
         campos_proibidos_gerente = ['id', 'funcionario', 'groups', "date_joined", "last_login"]
 
-        user = self.context['request'].user
+        user = request.user
+
         if not user.groups.filter(name='Gerente').exists() and not user.is_staff or user.cargo =='Gerente':
             for campo_proibido in campos_proibidos_users:
                 self.fields[campo_proibido].read_only = True
-            if user.cargo =='Gerente':
+            if type(user) != AnonymousUser and user.cargo =='Gerente':
                 for campo_proibido in campos_proibidos_gerente:
                     self.fields[campo_proibido].read_only = True
 
@@ -58,16 +62,20 @@ class AgendamentoSerializer(serializers.ModelSerializer):
 
 
 class AtendimentoCreateSerializer(serializers.ModelSerializer):
+
+    nome_atendente = serializers.SerializerMethodField()
+    nome_helper = serializers.SerializerMethodField()
+
     class Meta:
         model = Atendimento
         fields = '__all__'
         read_only_fields = ['atendente']
 
-    def validate_agendamento(self, value):
-        if self.context['request'].method == 'POST' and value.processado:
-            raise serializers.ValidationError({'detail': "O atendimento para esse agendamento já foi realizado."})
-        return value
-
+    def get_nome_atendente(self, obj):
+        return obj.atendente.username if obj.atendente else None
+    
+    def get_nome_helper(self, obj):
+        return obj.helper.username if obj.helper else None
 
     def validate_atendente(self, value):
         # Verifica se o atendente tem o cargo 'Atendente'

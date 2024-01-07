@@ -1,15 +1,13 @@
 from .models import Servico, Agendamento, Usuario
 from .serializers import *
-from django.http import Http404
-from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import Group
 from django.shortcuts import get_list_or_404
 from django.contrib.auth.hashers import make_password
-from .permissions import GerenteAtendenteHelperPermission, GerentePermission, AnonimousGerentePermission, GerenteAtendetePermission
+from .permissions import *
 
 
 class ServicoListCreate(generics.ListCreateAPIView):
@@ -214,48 +212,37 @@ class ClienteList(generics.ListAPIView):
     queryset = Usuario.objects.filter(funcionario=False, is_staff=False, cargo='Cliente')
     
 
-class ClienteDetailUpdate(APIView):
+class ClienteDetailUpdate(generics.RetrieveUpdateAPIView):
     """
     Retrieve, update or delete a clientes instance.
     """
     permission_classes = [IsAuthenticated]
+    serializer_class = UsuarioSerializer
 
-    def get_object(self, pk):
-        try:
-            return Usuario.objects.get(pk=pk, funcionario=False, is_staff=False)
-        except Usuario.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk, format=None):
-        
-        user = request.user
+    def get_queryset(self):
+        user = self.request.user
 
         if user.is_staff or user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
-            cliente = self.get_object(pk)
-        elif user.pk != pk:
-            raise Http404
+            return Usuario.objects.filter(funcionario=False, is_staff=False, cargo='Cliente')
+        elif not user.funcionario:
+            return Usuario.objects.filter(pk=user.pk, funcionario=False, is_staff=False, cargo='Cliente')
         else:
-            cliente = self.get_object(user.pk)
+            return Usuario.objects.none()
 
-        serializer = UsuarioSerializer(cliente, context={'request': request, 'user': user})
-        return Response(serializer.data)
+    def perform_update(self, serializer):
+        user = self.request.user
 
-    def put(self, request, pk, format=None):
+        if not user.is_staff and not user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
+            if user.pk != serializer.instance.pk:
+                self.permission_denied(self.request)
+
+        password = self.request.data.get('password', None)
         
-        user = request.user
+        if password is not None:
+            hashed_password = make_password(password)
+            serializer.validated_data['password'] = hashed_password
 
-        if user.is_staff or request.user.groups.filter(name__in=['Gerente', 'Atendente']).exists():
-            cliente = self.get_object(pk)
-        elif user.pk != pk:
-            raise Http404
-        else:
-            cliente = self.get_object(user.pk)
-
-        serializer = UsuarioSerializer(cliente, data=request.data, context={'request': request, 'user': user}, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
 
 
 class AtendimentoList(generics.ListAPIView):

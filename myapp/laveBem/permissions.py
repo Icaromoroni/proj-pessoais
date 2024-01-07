@@ -1,5 +1,4 @@
 from rest_framework.permissions import BasePermission
-from django.contrib.auth.models import AnonymousUser
 
 class GerenteAtendenteHelperPermission(BasePermission):
     def has_permission(self, request, view):

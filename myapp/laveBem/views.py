@@ -57,19 +57,19 @@ class BuscarAgendamentoList(generics.ListAPIView):
 
         queryset = Agendamento.objects.all()
 
-        processado = self.request.query_params.get('p')
+        processado = self.request.query_params.get('processado')
         data = self.request.query_params.get('data')
-        cliente = self.request.query_params.get('email')
-        servico = self.request.query_params.get('cod')
+        email = self.request.query_params.get('email')
+        pk_servico = self.request.query_params.get('cod')
 
         if processado:
             queryset = queryset.filter(processado=processado)
         elif data:
             queryset = queryset.filter(data=data)
-        elif cliente:
-            queryset = queryset.filter(cliente_id__email=cliente)
-        elif servico:
-            queryset = queryset.filter(servico__pk=servico)
+        elif email:
+            queryset = queryset.filter(cliente_id__email=email)
+        elif pk_servico:
+            queryset = queryset.filter(servico__pk=pk_servico)
         return queryset
 
 
@@ -291,4 +291,28 @@ class AtendimentoDetailUpdate(generics.RetrieveUpdateAPIView):
     def perform_update(self, serializer):
         serializer.save(atendente=self.request.user)
 
+
+class BuscarAtendimentoList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, GerenteAtendenteHelperPermission]
+
+    serializer_class = AtendimentoListSerializer
+    # criar classe de filtragem
+    def get_queryset(self):
+
+        queryset = Atendimento.objects.all()
+
+        data = self.request.query_params.get('data')
+        confirm = self.request.query_params.get('confirm')
+
+        if data:
+            if self.request.user.cargo == 'Helper':
+                queryset = queryset.filter(data=data, helper=self.request.user)            
+            else:
+                queryset = queryset.filter(data=data)
+        elif confirm:
+            if self.request.user.cargo == 'Helper':
+                queryset = queryset.filter(confirm_venda=confirm, helper=self.request.user)
+            else:
+                queryset = queryset.filter(confirm_venda=confirm)
+        return queryset
 

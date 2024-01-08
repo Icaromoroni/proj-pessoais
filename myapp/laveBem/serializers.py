@@ -23,17 +23,16 @@ class UsuarioSerializer(serializers.ModelSerializer):
         user = request.user
 
         if not user.groups.filter(name='Gerente').exists() and not user.is_staff or user.cargo =='Gerente':
-            for campo_proibido in campos_proibidos_users:
-                self.fields[campo_proibido].read_only = True
-            if type(user) != AnonymousUser and user.cargo =='Gerente':
-                for campo_proibido in campos_proibidos_gerente:
-                    self.fields[campo_proibido].read_only = True
+            print('debugge')
+            if type(user) != AnonymousUser or user.cargo =='Gerente':
+                if request.method == 'PUT':
+                    self.fields.update({campo: {'read_only': True} for campo in campos_proibidos_gerente})
+            else:
+                self.fields.update({campo: {'read_only': True} for campo in campos_proibidos_users})
 
-        if self.context['request'].method == 'PUT':
-            
-            self.fields['password'].required=False
-            self.fields['username'].required=False
-            self.fields['email'].required=False
+        if request.method == 'PUT':
+            campos_put = ['password', 'username', 'email']
+            self.fields.update({campo: {'required': False} for campo in campos_put})
 
 
 class ServicoSerializer(serializers.ModelSerializer):

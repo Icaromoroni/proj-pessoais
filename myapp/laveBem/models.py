@@ -61,6 +61,7 @@ class Atendimento(models.Model):
                                related_name='atendimentos_ajudados',
                                limit_choices_to={'cargo': 'Helper'})
     data_atendimento = models.DateTimeField(auto_now=True,help_text='Data do atendimento')
+    confirm_venda = models.BooleanField(verbose_name='Confirmar venda?', default=False)
 
 class Venda(models.Model):
     PAG = [

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Atendimento, Servico, Agendamento, Usuario
+from .models import Atendimento, Servico, Agendamento, Usuario, Venda
 from django.contrib.auth.models import AnonymousUser
 
 
@@ -23,17 +23,18 @@ class UsuarioSerializer(serializers.ModelSerializer):
         user = request.user
 
         if not user.groups.filter(name='Gerente').exists() and not user.is_staff or user.cargo =='Gerente':
-            print('debugge')
-            if type(user) != AnonymousUser or user.cargo =='Gerente':
+            if type(user) != AnonymousUser and user.cargo =='Gerente':
                 if request.method == 'PUT':
-                    self.fields.update({campo: {'read_only': True} for campo in campos_proibidos_gerente})
+                    for campo_proibido in campos_proibidos_gerente:
+                        self.fields[campo_proibido].read_only = True
             else:
-                self.fields.update({campo: {'read_only': True} for campo in campos_proibidos_users})
+                for campo_proibido in campos_proibidos_users:
+                    self.fields[campo_proibido].read_only = True
 
         if request.method == 'PUT':
-            campos_put = ['password', 'username', 'email']
-            self.fields.update({campo: {'required': False} for campo in campos_put})
-
+            self.fields['password'].required=False
+            self.fields['username'].required=False
+            self.fields['email'].required=False
 
 class ServicoSerializer(serializers.ModelSerializer):
 
@@ -41,10 +42,16 @@ class ServicoSerializer(serializers.ModelSerializer):
         model = Servico
         fields = '__all__'
 
+class ServicoListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Servico
+        exclude = ['ativo']
+
 
 class AgendamentoSerializer(serializers.ModelSerializer):
 
-    cliente_id = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(funcionario=False, is_staff=False), required=False)
+    cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(funcionario=False, is_staff=False), required=False)
     nome_cliente = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
 
@@ -54,10 +61,22 @@ class AgendamentoSerializer(serializers.ModelSerializer):
         read_only_fields = ['processado']
 
     def get_nome_cliente(self, obj):
-        return obj.cliente_id.username if obj.cliente_id else None
+        return obj.cliente.username if obj.cliente else None
     
     def get_email(self, obj):
-        return obj.cliente_id.email if obj.cliente_id else None
+        return obj.cliente.email if obj.cliente else None
+
+
+class AgendamentoListSerializer(serializers.ModelSerializer):
+    nome_cliente = serializers.SerializerMethodField()
+    servico = ServicoListSerializer(read_only=True)
+
+    class Meta:
+        model = Agendamento
+        exclude = []
+    
+    def get_nome_cliente(self, obj):
+        return obj.cliente.username if obj.cliente else None
 
 
 class AtendimentoCreateSerializer(serializers.ModelSerializer):
@@ -89,17 +108,6 @@ class AtendimentoCreateSerializer(serializers.ModelSerializer):
         return value
 
 
-class AgendamentoListSerializer(serializers.ModelSerializer):
-    nome_cliente = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Agendamento
-        exclude = []
-    
-    def get_nome_cliente(self, obj):
-        return obj.cliente_id.username if obj.cliente_id else None
-
-
 class AtendimentoListSerializer(serializers.ModelSerializer):
 
     agendamento = AgendamentoListSerializer(read_only=True)
@@ -108,10 +116,23 @@ class AtendimentoListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Atendimento
-        exclude = []
+        fields = '__all__'
     
     def get_nome_atendente(self, obj):
         return obj.atendente.username if obj.atendente else None
     
     def get_nome_helper(self, obj):
         return obj.helper.username if obj.helper else None
+
+class VendaListSerializer(serializers.ModelSerializer):
+    atendimento = AtendimentoListSerializer(read_only=True)
+
+    class Meta:
+        model = Venda
+        fields = '__all__'
+
+class VendaCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Venda
+        fields = '__all__'

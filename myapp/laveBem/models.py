@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator
 
 
 class Servico(models.Model):
@@ -33,16 +34,17 @@ class Usuario(AbstractUser):
 
 
 class Agendamento(models.Model):
-    cliente_id = models.ForeignKey(Usuario, related_name='agendamentos', on_delete=models.CASCADE, verbose_name='Nome do cliente')
+    cliente = models.ForeignKey(Usuario, related_name='agendamentos', on_delete=models.CASCADE, verbose_name='Nome do cliente')
     telefone = models.CharField(max_length=15, help_text='Exemplo: (99) 99999-9999.')
     endereco = models.CharField(max_length=300)
-    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='solicitacoes', verbose_name='Serviço')
-    data = models.DateTimeField(help_text='Data de agendamento do serviço.')
+    servico = models.ForeignKey(Servico, on_delete=models.CASCADE, related_name='agendamentos', verbose_name='Serviço')
+    data = models.DateField(help_text='Data de agendamento do serviço.')
+    hora = models.TimeField(help_text='Horário de agendamento do serviço.')
     processado = models.BooleanField(verbose_name='Processado?', default=False)
     cancelar = models.BooleanField(verbose_name='Cancelar?', default=False)
 
     def __str__(self) -> str:
-        return self.cliente_id.username
+        return self.cliente.username
 
 
 class Atendimento(models.Model):
@@ -50,7 +52,7 @@ class Atendimento(models.Model):
                 ('Realizado', 'Realizado'),
                 ('Cancelado', 'Cancelado'),]
     
-    agendamento = models.OneToOneField(Agendamento, on_delete=models.CASCADE, related_name='atendimentos')
+    agendamento = models.OneToOneField(Agendamento, on_delete=models.CASCADE, related_name='atendido')
     situacao = models.CharField(max_length=9, default='Pendente', choices=SITUACAO)
     atendente = models.ForeignKey(Usuario,
                                   on_delete=models.CASCADE,
@@ -65,13 +67,15 @@ class Atendimento(models.Model):
 
 class Venda(models.Model):
     PAG = [
-        ('1', 'Pix'),
-        ('2', 'Debito'),
-        ('3', 'Crédito'),
+        ('Pix', 'Pix'),
+        ('Debito', 'Debito'),
+        ('Credito', 'Crédito'),
     ]
-    atendimento = models.OneToOneField(Agendamento, on_delete=models.CASCADE, related_name='vendidos')
+    atendimento = models.OneToOneField(Atendimento, on_delete=models.CASCADE, related_name='vendidos')
     forma_pag = models.CharField(max_length=10, choices=PAG)
-    desconto = models.IntegerField(default=0)
-    valor_total = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$')
+    desconto = models.IntegerField(default=0, validators=[MaxValueValidator(10)])
+    valor_total = models.DecimalField(max_digits=8, decimal_places=2, help_text= 'em R$', null=True, blank=True)
     gerente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='desconto', null=True, blank=True)
+    
+
 

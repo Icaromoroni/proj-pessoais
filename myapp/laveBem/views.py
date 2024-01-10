@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import Group
-from django.shortcuts import get_list_or_404
+from django.shortcuts import get_list_or_404, get_object_or_404
 from django.contrib.auth.hashers import make_password
 from .permissions import *
 
@@ -67,7 +67,7 @@ class BuscarAgendamentoList(generics.ListAPIView):
         elif data:
             queryset = queryset.filter(data=data)
         elif email:
-            queryset = queryset.filter(cliente_id__email=email)
+            queryset = queryset.filter(cliente__email=email)
         elif pk_servico:
             queryset = queryset.filter(servico__pk=pk_servico)
         return queryset
@@ -81,7 +81,7 @@ class AutoAgendamentoCreate(generics.CreateAPIView):
     serializer_class = AgendamentoSerializer
 
     def perform_create(self, serializer):
-        serializer.save(cliente_id=self.request.user)
+        serializer.save(cliente=self.request.user)
 
 
 class BuscarAutoAgendamentoList(generics.ListAPIView):
@@ -91,7 +91,7 @@ class BuscarAutoAgendamentoList(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = request.user
-        queryset = get_list_or_404(Agendamento, cliente_id=user)
+        queryset = get_list_or_404(Agendamento, cliente=user)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -101,10 +101,10 @@ class BuscarMeusAgendamentosDetailUpdate(generics.RetrieveUpdateAPIView):
 
     serializer_class = AgendamentoSerializer
     def get_queryset(self):
-        return Agendamento.objects.filter(cliente_id=self.request.user)
+        return Agendamento.objects.filter(cliente=self.request.user)
 
     def perform_update(self, serializer):
-        serializer.save(cliente_id=self.request.user)
+        serializer.save(cliente=self.request.user)
 
 
 class FuncionarioListCreate(generics.ListCreateAPIView):
@@ -315,4 +315,37 @@ class BuscarAtendimentoList(generics.ListAPIView):
             else:
                 queryset = queryset.filter(confirm_venda=confirm)
         return queryset
+
+
+class VendaListCreate(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, GerenteAtendetePermission]
+
+    queryset = Venda.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return VendaListSerializer
+        elif self.request.method == 'PUT' or self.request.method == 'PATCH' or self.request.method == 'POST':
+            return VendaCreateSerializer
+        
+    def perform_create(self, serializer):
+        user = self.request.user
+        desconto = self.request.data.get('desconto', 0)
+        instance = Atendimento.objects.get(pk=self.request.data.get('atendimento'))
+        valor = float(instance.agendamento.servico.valor)
+        
+        if desconto:
+            if user.cargo == 'Gerente':
+                valor_total = valor - (valor*(desconto/100))
+                serializer.validated_data['valor_total'] = valor_total
+                serializer.validated_data['gerente'] = user
+            else:
+                raise serializers.ValidationError({'detail': 'Só gerentes podem dar desconto.'})
+        else:
+            serializer.validated_data['valor_total'] = valor
+        instance.confirm_venda = True
+        serializer.save()
+        return super().perform_create(serializer)
+
+
 

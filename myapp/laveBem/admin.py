@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Agendamento, Usuario, Atendimento
+from .models import Agendamento, Usuario, Atendimento, Venda
 from .forms import AgendamentoForm
 
 
@@ -14,4 +14,8 @@ class UsuarioAdmin(admin.ModelAdmin):
 
 @admin.register(Atendimento)
 class AtendimentoAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Venda)
+class VendaAdmin(admin.ModelAdmin):
     pass

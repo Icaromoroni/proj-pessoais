@@ -9,4 +9,5 @@ class AgendamentoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Limitar as opções de seleção para o campo 'nome' aos usuários com cargo 'Cliente'
-        self.fields['cliente_id'].queryset = self.fields['cliente_id'].queryset.filter(cargo='Cliente', is_staff=False)
+        self.fields['cliente'].queryset = self.fields['cliente'].queryset.filter(cargo='Cliente', is_staff=False)
+

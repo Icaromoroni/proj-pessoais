@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="styles.css">
+    <title>Calendário Interativo</title>
+</head>
+<body>
+    <header class="header">
+        <h1>Calendário de almoço missionário</h1>
+    </header>
+    <div id="calendar">
+        <div class="calendar-header">
+            <span id="prevMonth" class="material-symbols-outlined month-change">
+                arrow_back_ios
+                </span>
+            <h2 id="currentMonthYear"></h2>
+            <span id="nextMonth" class="material-symbols-outlined month-change">
+                arrow_forward_ios
+                </span>
+        </div>
+        <article class="calendar-week-days">
+            <div>Dom</div>
+            <div>Seg</div>
+            <div>Ter</div>
+            <div>Qua</div>
+            <div>Qui</div>
+            <div>Sex</div>
+            <div>Sab</div>
+        </article>
+        <div id="daysContainer">
+            
+        </div>
+    </div>
+    <script src="calendario.js"></script>
+</body>
+</html>

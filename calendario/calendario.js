@@ -28,7 +28,7 @@ const nomes_ = [
     'João',
     'Maria',
     'José',
-    'Fátima',
+    'André',
     'Antonia',
 ]
 let month_picker = document.querySelector('#month');
@@ -55,6 +55,7 @@ const generateCalendar = (month, year) => {
     month_picker.innerHTML = month_names[month];
     calendar_header_year.innerHTML = year;
     let first_day = new Date(year, month);
+    let semana = new Date()
 
     for(let i=0; i<=days_of_month[month] + first_day.getDay() - 1; i++){
         let day = document.createElement('div');
@@ -62,7 +63,7 @@ const generateCalendar = (month, year) => {
         let numDay = document.createElement('span');
         if(i>=first_day.getDay()){
             numDay.innerHTML = i - first_day.getDay() + 1;
-            nomes.innerHTML = nomes_[i-1]
+            // nomes.innerHTML = nomes_[(i - first_day.getDay() + 1)-first_day.getDay() + 1]
             if(i - first_day.getDay() + 1 === currentDate.getDate() && year === 
             currentDate.getFullYear() && month === currentDate.getMonth()){
                 numDay.classList.add('current-date');
@@ -74,6 +75,24 @@ const generateCalendar = (month, year) => {
         day.appendChild(nomes)
         calendar_days.appendChild(day);
     }
+};
+
+document.querySelector('#pre-month').onclick = () => {
+    --currentMonth.value;
+    if (currentMonth.value < 0){
+        currentMonth.value = 11
+        --currentYear.value
+    }
+    generateCalendar(currentMonth.value, currentYear.value);
+};
+document.querySelector('#next-month').onclick = () => {
+    ++currentMonth.value;
+
+    if (currentMonth.value > 11){
+        currentMonth.value = 0
+        ++currentYear.value
+    }
+    generateCalendar(currentMonth.value, currentYear.value)
 };
 
 let currentDate = new Date();

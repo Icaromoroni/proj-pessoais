@@ -1,62 +1,50 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>title</title>
+    <title>calendario</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Titulo</h1>
-            <h2>Subtitulo</h2>
-        </header>
-        <main>
-            <section class="calendar">
-                <header class="calendar-header">
-                    <article class="month-picker">
-                        <span class="month-change" id="pre-month">
-                            <pre><</pre>
-                        </span>
-                        <span id="month">Jan</span>
-                        <span class="month-change" id="next-month">
-                            <pre>></pre>
-                        </span>
-                    </article>
-                    <span class="year-picker" id="year-picker">2024</span>
-                </header>
-                <main class="calendar-body">
-                    <article class="calendar-week-days">
-                        <div>Dom</div>
-                        <div>Seg</div>
-                        <div>Ter</div>
-                        <div>Qua</div>
-                        <div>Qui</div>
-                        <div>Sex</div>
-                        <div>Sab</div>
-                    </article>
-                    <article class="calendar-days">
-    
-                    </article>
-                    <article class="calendar-footer">
-    
-                    </article>
-                    <article class="date-time-formate">
-                        <div class="day-text-formate">HOJE</div>
-                        <div class="date-time-value">
-                            <div class="time-formate">10:00:00</div>
-                            <div class="date-formate">09 - Jan - 2024</div>
-                        </div>
-                    </article>
-                    <article class="month-list">
-    
-                    </article>
-                </main>
+        <div class="calendar">
+            <div class="calendar-header">
+                <span class="material-symbols-outlined month-change" id="pre-month">
+                    arrow_back_ios_new
+                    </span>
+                <div>
+                    <span id="month">Janeiro</span>
+                    <span id="year">2024</span>
+                </div>
+                <span class="material-symbols-outlined month-change" id="next-month">
+                    arrow_forward_ios
+                    </span>
+            </div>
+            <section class="calendar-body">
+                <article class="calendar-week-days">
+                    <div>Dom</div>
+                    <div>Seg</div>
+                    <div>Ter</div>
+                    <div>Qua</div>
+                    <div>Qui</div>
+                    <div>Sex</div>
+                    <div>Sab</div>
+                </article>
+                <article class="calendar-days">
+
+                </article>
+                <article class="date-time-formate">
+                    <div class="day-text-formate">HOJE</div>
+                    <div class="date-time-value">
+                        <div class="date-formate">09 - Jan - 2024</div>
+                        <div class="time-formate">10:00:00</div>
+                    </div>
+                </article>
             </section>
-            <section class="info">
-                informação da pessoa(nome e sobrenome, endereco e telefone)
-            </section>
-        </main>
+        </div>
     </div>
+    <script src="calendario.js"></script>
 </body>
 </html>

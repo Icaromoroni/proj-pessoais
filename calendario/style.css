@@ -9,30 +9,119 @@ body{
     background-color: #f1f1f1;
 }
 
-.header{
+.calendar{
+    max-width: 1080px;
+}
+
+
+.calendar-header{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 28px;
+    background: #142862;
+    font-weight: 700;
+    color: white;
+}
+
+.calendar-week-days{
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    color: rgb(104, 104, 104);
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+}
+
+.calendar-week-days div:hover{
+    color: black;
+    transform: scale(1.2);
+    transition: all .2s ease-in-out;
+}
+
+.date-time-formate{
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #6b6b6b;
-    padding-top: 10px;
-    border-bottom: 1px solid #7f7f7f;
+    gap: 20px;
 }
 
-.main{
+.date-time-formate .day-text-formate{
+    font-family: Microsoft JhengHei UI;
+    font-size: 1.4rem;
+    border-right: 5px solid #142862;
+    padding-right: 15px;
+}
+
+.date-time-formate .date-time-value{
     display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 20px;
 }
 
-.calendar{
-    border: 1px solid red;
-    height: 60vh;
-    width: 70%;
-}
-.aside{
-    border: 1px solid orange;
-    width: 30%;
+.time-formate{
+    font-size: 1.5rem;
 }
 
-.info{
-    border: 1px solid green;
-    height: 20vh;
+.month-change{
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    margin: 0px 10px;
+    cursor: pointer;
 }
+
+.month-change:hover{
+    background-color: #435281;
+    transition: all 2.s ease-in-out;
+}
+
+.calendar-days{
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+.calendar-week-days div{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-days div p{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.current-date{
+    background-color: #435281;
+    color: white;
+    font-weight: 600;
+}
+
+.calendar-days div span{
+    border-radius: 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+
+}
+
+.calendar-days div{
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    height: 110px;
+    display: flex;
+    padding: 5px;
+    /* position: relative; */
+    cursor: pointer;
+    animation: to-top 1s forwards;
+}
+

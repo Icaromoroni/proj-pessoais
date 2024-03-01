@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar</title>
+    <link rel="preconnect" href="http://fonts.googleapis.com">
+    <link rel="preconnect" href="http://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css2?family=Work+Sans&display=swp">
+    <link rel="stylesheet" href="sidebar.css">
+    <script defer src="sidebar.js"></script>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-top-wrapper">
+            <div class="sidebar-top">
+                <a href="#" class="logo__wrapper">
+                    <img src="caminho/imagem" alt="Imagem logo" class="logo-small">
+                    <span class="hide">Titulo</span>
+                </a>
+            </div>
+            <div class="expand-btn"><!-- svg --></div>
+        </div>
+        <div class="search__wrapper">
+            <input type="search" placeholder="Pesquisar">
+        </div>
+        <div class="sidebar-links">
+            <h2>Links do sidebar - esse é o Titulo</h2>
+            <ul>
+                <li>
+                   <a href="#dashboard">
+                    <span class="link hide">Dashboard</span>
+                    <span class="tooltip__content">Dashboard</span>
+                   </a> 
+                </li>
+                <!-- more links -->
+            </ul>
+        </div>
+        <div class="sidebar-links bottom-links">
+            <h2>Settings</h2>
+            <ul>
+                <li>
+                    <a href="#settings" title="Settings" class="tooltip">
+                        <span class="link hide">Settings</span>
+                        <span class="tooltip__content">Settings</span>
+                    </a>
+                </li>
+                <!-- more links -->
+            </ul>
+        </div>
+        <div class="divider"></div>
+        <div class="sidebar__profile">
+            <div class="avatar__wrapper">
+                <img src="caminho/avatar" alt="Avatar" class="avatar">
+                <div class="online__status"></div>
+            </div>
+            <section class="avatar__name hide">
+                <div class="user-name">Icaro</div>
+                <div class="email">icaro@icaro.com</div>
+            </section>
+            <a href="#logout" class="logout">
+                <!-- svg -->
+                Sair
+            </a>
+        </div>
+    </nav>
+
+    
+</body>
+</html>

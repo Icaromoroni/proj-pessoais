@@ -1,7 +1,7 @@
-import './input.css';
+import '../../index.css';
 import { useState } from 'react';
 
-function App() {
+function SideBar() {
 
   const[open, setOpen] = useState(true)
   const [active, setActive] = useState(0)
@@ -53,4 +53,4 @@ function App() {
   );
 }
 
-export default App;
+export default SideBar;
